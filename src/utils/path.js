@@ -16,13 +16,13 @@ const getQuadraticXY = function (t, sx, sy, cp1x, cp1y, ex, ey) {
     };
 };
 
-const getBezierPoints = function ({
+export const getBezierPoints = ({
     startPoint,
     controlPoint1,
     controlPoint2,
     endPoint,
     numberOfPointsToGenerate
-}) {
+}) => {
     let pts = [];
     let tests = numberOfPointsToGenerate || MAX_POINTS_TO_GENERATE;
     for (let t = 0; t <= tests; t++) {
@@ -37,8 +37,7 @@ const getBezierPoints = function ({
     return pts;
 };
 
-
-const getPathPointsGivenPath = function (path) {
+export const getPathPointsGivenPath = (path) => {
     let points = [];
     for (let i = 1; i < path.length; i++) {
         const point = path[i];
@@ -70,9 +69,4 @@ const getPathPointsGivenPath = function (path) {
     });
 
     return points;
-};
-
-export {
-    getBezierPoints,
-    getPathPointsGivenPath
 };

@@ -73,12 +73,6 @@ export default class Shape {
             ctx.fillStyle = this._background.color.rgba;
     }
 
-    rotateFromPosition(ctx, position) {
-        ctx.translate(position.x, position.y);
-        ctx.rotate(this._transform.rotation.angle);
-        ctx.translate(-position.x, -position.y);
-    }
-
     get sides() {
         const middleWidth = this._transform.dimension.width / 2;
         const middleHeight = this._transform.dimension.height / 2;
@@ -120,6 +114,10 @@ export default class Shape {
 
     get rotation() {
         return this._transform.rotation;
+    }
+
+    get rotate(){
+        return this._transform.rotation && this._transform.rotation.angle > 0;
     }
 
     get shadow() {

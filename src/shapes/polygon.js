@@ -25,10 +25,13 @@ export default class Polygon extends Shape {
     draw(ctx) {
         ctx.save();
         super.draw(ctx);
-        this.rotateFromPosition(ctx, {
-            x: this._position.x + this._dimension.width / 2,
-            y: this._position.y + this._dimension.height / 2
-        });
+        if(this.rotate){
+            const rotateFromX = this._position.x + this._dimension.width / 2;
+            const rotateFromY = this._position.y + this._dimension.height / 2;
+            ctx.translate(rotateFromX, rotateFromY);
+            ctx.rotate(this.rotation.angle);
+            ctx.translate(-rotateFromX,- rotateFromY);
+        }
         this._path = new Path2D();
         ctx.beginPath();
         this._path.moveTo(points[0].x, points[0].y);
