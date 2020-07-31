@@ -1,0 +1,8 @@
+@font-face{
+    font-family: "Salesforce Regular";
+    src: url('../fonts/salesforce-regular.woff');
+}
+
+body{
+    font-family: "Salesforce Regular";
+}

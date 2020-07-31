@@ -1,0 +1,1910 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <title>Salesforce Schema Builder Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+    </script>
+
+    <script src="schema-builder.js"></script>
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+            background-color: #202124;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        pre::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE and Edge */
+        pre {
+            -ms-overflow-style: none;
+        }
+
+        p {
+            margin-top: 10px;
+            padding-left: 15px;
+            margin-bottom: 0px;
+            color: white;
+        }
+
+        li {
+            font-size: 12px;
+            color: white;
+        }
+
+        pre {
+            color: white;
+            transition: width 0.2s linear;
+        }
+
+        .string {
+            color: rgb(206, 145, 120);
+        }
+
+        .number {
+            color: rgb(181, 206, 168);
+        }
+
+        .boolean {
+            color: rgb(86, 156, 214);
+        }
+
+        .null {
+            color: rgb(197, 134, 192);
+        }
+
+        .key {
+            color: rgb(156, 220, 254);
+        }
+
+        #entitydata {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .flex-grow-1 {
+            -ms-flex-positive: 1 !important;
+            flex-grow: 1 !important;
+        }
+
+        /*
+            pointer-events:none; 
+            */
+        .h-35 {
+            height: 35% !important;
+        }
+
+        .h-65 {
+            height: 65% !important;
+        }
+
+        #block-details {
+            transition: width 0.1s ease-in-out, opacity 0.1s ease-in;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex flex-column h-100">
+        <div class="d-flex flex-grow-0" style="position: fixed; z-index: 1; bottom: 20; right: 20; pointer-events:none; border: thin solid black; opacity: 0.6">
+            <canvas id="canvas2" class="d-flex" width="300" height="300" style="background-color: white;"></canvas>
+        </div>
+
+        <div class="d-flex flex-grow-0 w-100 h-100 m-0" style="position: absolute; z-index: 0;">
+            <canvas id="canvas" class="d-flex"></canvas>
+        </div>
+
+        <div id="block-details" class="d-flex flex-column h-100" style="position: absolute; width: 0px; opacity: 0;">
+            <div id="close-form" class="btn btn-dark" style="border-radius: 0;">
+                Close
+            </div>
+            <div class="d-flex flex-column h-100" style="background-color: white;  overflow-y: auto;">
+                <h3 id="entity-name" class="m-2"></h3>
+                <form id="form" style="display: inline !important;" class="flex-grow-1 my-2">
+                    <div class="form-group">
+                        <label for="entity-background-color">Background Color</label>
+                        <input type="color" class="form-control" id="entity-background-color"
+                            style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+                    </div>
+                    <div class="form-group">
+                        <label for="entity-border-color">Border Color</label>
+                        <input type="color" class="form-control" id="entity-border-color"
+                            style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+                    </div>
+                    <div class="form-group">
+                        <label for="entity-border-width">Border Width</label>
+                        <input type="range" class="form-control p-0" value="0" min="0" max="50" step="1"
+                            id="entity-border-width" style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+                    </div>
+                    <div class="form-group">
+                        <label for="entity-border-radius">Border Radius</label>
+                        <input type="range" class="form-control p-0" value="0" min="0" max="50" step="1"
+                            id="entity-border-radius" />
+                    </div>
+                    <div class="form-group" id="entity-header-group">
+                        <label for="entity-header-text-color">Header Text Color</label>
+                        <input type="color" class="form-control" id="entity-header-text-color"
+                            style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+                        
+                        <label for="entity-header">Header Text</label>
+                        <textarea class="form-control" id="entity-header" rows="3"></textarea>
+                    </div>
+                    <div class="form-group" id="entity-body-group">
+                        <label for="entity-body-text-color">Body Text Color</label>
+                        <input type="color" class="form-control" id="entity-body-text-color"
+                            style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+                            
+                        <label for="entity-body">Body Text</label>
+                        <textarea class="form-control" id="entity-body" rows="3"></textarea>
+                    </div>
+                    <div class="form-group" id="entity-footer-group">
+                        <label for="entity-footer-text-color">Footer Text Color</label>
+                        <input type="color" class="form-control" id="entity-footer-text-color"
+                            style=" height: 50;padding: 0; border: 0;  margin: 0;" />
+
+                        <label for="entity-footer">Footer Text</label>
+                        <textarea class="form-control" id="entity-footer" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        //#b4c6e3
+        const options = {
+            background: {
+                color: 'white',
+            },
+            zoom: {
+                level: schemaBuilder.isMobile() ? 0.8 : 2,
+                max: 4,
+                min: 0.2,
+                speed: 0.1
+            },
+            fps: 75,
+            drawGrid: true,
+            editor: false,
+            canMoveEntities: true,
+            canDragCanvas: false
+        }
+
+        let data = {
+            user:{
+                label: 'User',
+                icon: {
+                    name: 'standard:user',
+                    background: {
+                        color: '#7f8de1'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 100, y: 500  },
+                isDraggable: true,
+                dimension: { width: 500, height: 300 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id: {
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name: {
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    managerId: {
+                        label: 'Manager',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    alias: {
+                        label: 'Alias',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            account:{
+                label: 'Account',
+                icon: {
+                    name: 'standard:account',
+                    background: {
+                        color: '#7f8de1'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'Arial',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 100, y: 100  },
+                isDraggable: true,
+                dimension: { width: 500, height: 100 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id: {
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name: {
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    parentAccountId: {
+                        label: 'Parent Account',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            opportunity1:{
+                label: 'Account',
+                icon: {
+                    name: 'standard:opportunity',
+                    background: {
+                        color: '#fcb95b'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 1000, y: 100  },
+                isDraggable: true,
+                dimension: { width: 300, height: 150 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id:{
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name:{
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    status:{
+                        label: 'Status',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    stage:{
+                        label: 'Stage',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    accountId:{
+                        label: 'Account Id',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    closeDate:{
+                        label: 'Close Date',
+                        type: 'DateTime',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    total:{
+                        label: 'Total',
+                        type: 'Currency',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdById:{
+                        label: 'Created By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedById:{
+                        label: 'Last Modified By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    startDate: {
+                        label: 'Start Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: 'white',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdDate:{
+                        label: 'Created Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedDate:{
+                        label: 'Last Modified Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    parentOpportunity:{
+                        label: 'Parent Opportunity',
+                        type: 'Id',
+                        reference: 'opportunity1',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            opportunity2:{
+                label: 'Opportunity',
+                icon: {
+                    name: 'standard:opportunity',
+                    background: {
+                        color: '#fcb95b'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 1000, y: 300  },
+                isDraggable: true,
+                dimension: { width: 300, height: 250 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id:{
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name:{
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    status:{
+                        label: 'Status',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    stage:{
+                        label: 'Stage',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    accountId:{
+                        label: 'Account Id',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    closeDate:{
+                        label: 'Close Date',
+                        type: 'DateTime',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    total:{
+                        label: 'Total',
+                        type: 'Currency',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdById:{
+                        label: 'Created By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedById:{
+                        label: 'Last Modified By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    startDate: {
+                        label: 'Start Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: 'white',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdDate:{
+                        label: 'Created Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedDate:{
+                        label: 'Last Modified Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            opportunity3:{
+                label: 'Opportunity',
+                icon: {
+                    name: 'standard:opportunity',
+                    background: {
+                        color: '#fcb95b'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 1000, y: 600  },
+                isDraggable: true,
+                dimension: { width: 300, height: 250 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id:{
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name:{
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    status:{
+                        label: 'Status',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    stage:{
+                        label: 'Stage',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    accountId:{
+                        label: 'Account Id',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    closeDate:{
+                        label: 'Close Date',
+                        type: 'DateTime',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    total:{
+                        label: 'Total',
+                        type: 'Currency',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdById:{
+                        label: 'Created By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedById:{
+                        label: 'Last Modified By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    startDate: {
+                        label: 'Start Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: 'white',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdDate:{
+                        label: 'Created Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedDate:{
+                        label: 'Last Modified Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            opportunity4:{
+                label: 'Opportunity',
+                icon: {
+                    name: 'standard:actions_and_buttons',
+                    background: {
+                        color: '#fcb95b'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: -500, y: 500  },
+                isDraggable: true,
+                dimension: { width: 300, height: 250 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id:{
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name:{
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    status:{
+                        label: 'Status',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    stage:{
+                        label: 'Stage',
+                        type: 'Picklist',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    accountId:{
+                        label: 'Account Id',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    closeDate:{
+                        label: 'Close Date',
+                        type: 'DateTime',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    total:{
+                        label: 'Total',
+                        type: 'Currency',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdById:{
+                        label: 'Created By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedById:{
+                        label: 'Last Modified By Id',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    startDate: {
+                        label: 'Start Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: 'white',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    createdDate:{
+                        label: 'Created Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    lastModifiedDate:{
+                        label: 'Last Modified Date',
+                        type: 'Date',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            }
+        }
+
+        const schema = new schemaBuilder.Schema({
+            options,
+            data,
+        })
+
+        setInterval(()=>{
+            const canvas2 = document.getElementById('canvas2');
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.save();
+            ctx2.clearRect(0,0, 300, 300);
+            const canvas1Transform = schema._canvas._ctx.getTransform();
+            ctx2.setTransform(canvas1Transform.a * 0.15, 0,0, canvas1Transform.d * 0.32, canvas1Transform.e* 0.15, canvas1Transform.f* 0.32);
+            ctx2.strokeStyle = 'black'
+            ctx2.lineWidth = 2;
+            const tables = schema._canvas._entityManager.getEntitiesInLayer(1);
+            for(let table of tables){
+                ctx2.strokeRect(table._transform.position.x, table._transform.position.y, table._transform.dimension.width, table._transform.dimension.height);
+            };
+            ctx2.restore();
+        }, 1000/60);
+
+        setTimeout(()=>{console.log(schema.data)}, 2000);
+
+        /*
+        setTimeout(()=>{
+            schema.removeTableByName('account');
+        }, 5000)*/
+
+        setTimeout(()=>{
+            schema.removeTableByName('user');
+        }, 5000)
+
+
+        setTimeout(()=>{
+            const field = {
+                name: 'testing',
+                label: 'test',
+                type: 'ID',
+                font: {
+                    family: 'Arial',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: '#3e3e3c',
+                    size: 15,
+                    weight: 'normal',
+                },
+                border: {
+                    lineWidth: 0,
+                    color: 'white'
+                }
+            }
+            schema.addFieldToTable(field, 'opportunity1');
+        }, 5000)
+
+        setTimeout(()=>{
+            const field = {
+                name: 'testing2',
+                label: 'test 2',
+                type: 'Lookup',
+                reference: 'account',
+                font: {
+                    family: 'Arial',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: '#3e3e3c',
+                    size: 15,
+                    weight: 'normal',
+                },
+                border: {
+                    lineWidth: 0,
+                    color: 'white'
+                }
+            }
+            schema.addFieldToTable(field, 'opportunity1');
+        }, 5001)
+
+        /*
+        setTimeout(()=>{
+            const user = {
+                label: 'User',
+                name: 'user',
+                icon: {
+                    name: 'standard:user',
+                    background: {
+                        color: '#7f8de1'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 100, y: 500  },
+                isDraggable: false,
+                dimension: { width: 500, height: 150 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id: {
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name: {
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    managerId: {
+                        label: 'Manager',
+                        type: 'Lookup',
+                        reference: 'user',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    alias: {
+                        label: 'Alias',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            }
+            
+            schema.addTable(user);
+        }, 6000);
+    
+        setTimeout(()=>{
+            const account = {
+                label: 'Account',
+                name: 'account',
+                icon: {
+                    name: 'standard:account',
+                    background: {
+                        color: '#7f8de1'
+                    },
+                    padding: {
+                        left: 10,
+                        top: 5,
+                        right: 10,
+                        bottom: 10
+                    },
+                    border:{
+                        radius: 5
+                    }
+                },
+                font: {
+                    family: 'sans-serif',
+                    style: 'normal',
+                    variant: 'normal',
+                    color: 'black',
+                    size: 18,
+                    weight: 'bold',
+                },
+                position: { x: 100, y: 100  },
+                isDraggable: true,
+                dimension: { width: 500, height: 200 },
+                padding: {
+                    left: 10,
+                    top: 10,
+                    right: 10,
+                    bottom: 10
+                },
+                border: {
+                    color: '#dddbda',
+                    radius: 5,
+                    lineWidth: 1
+                },
+                header: {
+                    border: {
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                                topLeft: 5,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 0
+                        }
+                    }
+                },
+                footer: {
+                    border:{
+                        color: '#dddbda',
+                        lineWidth: 1,
+                        radius: {
+                            topLeft: 0,
+                            bottomLeft: 5,
+                            topRight: 0,
+                            bottomRight: 5
+                        }
+                    }
+                },
+                shadow:{
+                    offsetX: 0,
+                    offsetY: 5,
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    blur: 5
+                },
+                background: {
+                    color: 'white'
+                },
+                fields:{
+                    id: {
+                        label: 'Id',
+                        type: 'ID',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    name: {
+                        label: 'Name',
+                        type: 'Text',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    },
+                    parentAccountId: {
+                        label: 'Parent Account',
+                        type: 'Lookup',
+                        reference: 'account',
+                        font: {
+                            family: 'Arial',
+                            style: 'normal',
+                            variant: 'normal',
+                            color: '#3e3e3c',
+                            size: 15,
+                            weight: 'normal',
+                        },
+                        border: {
+                            lineWidth: 0,
+                            color: 'white'
+                        }
+                    }
+                }
+            }
+
+            schema.addTable(account);
+        }, 6500);
+    
+        */
+    </script>
+</body>
+
+</html>

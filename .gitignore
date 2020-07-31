@@ -1,0 +1,14 @@
+node_modules
+.vscode
+/bell.svg
+/index.html
+lib/index.js
+.npmignore
+.cache/
+dist/index.html
+chromedriver.log
+tests_output/
+tests/
+nightwatch.conf.js
+nightwatch.json
+*.log
