@@ -1,11 +1,14 @@
 {
   "name": "@allanoricil/canvasjs",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Draw Database Schemas",
   "main": "/dist/index.js",
   "module": "/dist/index.js",
   "browser": "/dist/index.js",
   "homepage": "https://naughty-dijkstra-92979d.netlify.app/",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "minify": "babel index.js -d dist",
     "uglify": "uglifyjs dist/index.js -o dist/index.min.js -c -m",
