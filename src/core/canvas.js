@@ -1,7 +1,6 @@
 import Position from '../transforms/position.js';
 import Transform from '../transforms/transform.js';
 import EntityManager from './entityManager.js';
-import * as GridSVG from '../../resources/images/grid.svg';
 
 export default class Canvas {
 
@@ -18,10 +17,6 @@ export default class Canvas {
             min: 0.2,
             speed: 0.01
         };
-    }
-
-    static get BACKGROUND() {
-        return 'transparent';
     }
 
     static get FPS() {
@@ -46,16 +41,16 @@ export default class Canvas {
         this._el.style.maxHeight = 'none';
         this._el.focus();
         this._imagesSource = options.imagesSource;
-        if(options.drawGrid) this._el.style.backgroundImage = `url('${this._imagesSource ? this._imagesSource + "/" : ""}${GridSVG.default}')`;
-        this._el.style.backgroundColor = options && options.background ? options.background.color : Canvas.BACKGROUND;
-        this._fps = options && options.fps ? options.fps : Canvas.FPS;
+        this._el.style.backgroundImage = options.backgroundImage;
+        this._el.style.backgroundColor = options.background && options.background.color ? options.background.color : null;
+        this._fps = options.fps ? options.fps : Canvas.FPS;
         this._canMoveEntities = options.canMoveEntities !== false;
-        this._canDragCanvas = options && options.canDragCanvas ? options.canDragCanvas : Canvas.CANDRAGCANVAS;
+        this._canDragCanvas = options.canDragCanvas ? options.canDragCanvas : Canvas.CANDRAGCANVAS;
         this._mouse = new Position({
             x: 0,
             y: 0
         });
-        this._scaleLimits = options && options.zoom ? {
+        this._scaleLimits = options.zoom ? {
             max: options.zoom.max || Canvas.SCALELIMITS.max,
             min: options.zoom.min || Canvas.SCALELIMITS.min,
             speed: options.zoom.speed || Canvas.SCALELIMITS.speed

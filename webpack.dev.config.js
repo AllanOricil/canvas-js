@@ -1,12 +1,12 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
     mode: 'development',
     entry: './src/index.js',
     output: {
-        filename: 'canvasjs.js',
+        filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
         library: 'canvasJS',
         libraryTarget: 'umd',
@@ -17,10 +17,13 @@ module.exports = {
         port: 9000
     },
     plugins: [
-        new MiniCssExtractPlugin({
-            filename: '[name].css',
-            chunkFilename: '[id].css',
-        })
+        new MiniCssExtractPlugin(
+            {
+                filename: '[name].css',
+                chunkFilename: '[id].css',
+            }
+        ),
+        new CleanWebpackPlugin()
     ],
     module: {
         rules: [

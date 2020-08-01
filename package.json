@@ -1,10 +1,10 @@
 {
   "name": "@allanoricil/canvasjs",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Draw Database Schemas",
-  "main": "/dist/canvasjs.js",
-  "module": "/dist/canvasjs.js",
-  "browser": "/dist/canvasjs.js",
+  "main": "/dist/index.js",
+  "module": "/dist/index.js",
+  "browser": "/dist/index.js",
   "homepage": "https://naughty-dijkstra-92979d.netlify.app/",
   "scripts": {
     "minify": "babel index.js -d dist",
@@ -16,7 +16,7 @@
     "type": "git",
     "url": "git+https://github.com/AllanOricil/canvasjs.git"
   },
-  "unpkg": "./dist/canvasjs.js",
+  "unpkg": "./dist/index.js",
   "author": "allanoricil",
   "license": "ISC",
   "keywords": [],
@@ -27,6 +27,7 @@
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-preset-env": "^1.7.0",
     "chromedriver": "^81.0.0",
+    "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^4.1.1",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
     "file-loader": "^6.0.0",
