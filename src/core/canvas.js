@@ -454,6 +454,13 @@ export default class Canvas {
         return { x: transformedX, y: transformedY };
     }
 
+    saveAsImage(name) {
+        var link = document.createElement('a');
+        link.download = `${name}.png`;
+        link.href = this._el.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        link.click();
+    }
+
     get ctx() {
         return this._ctx;
     }
