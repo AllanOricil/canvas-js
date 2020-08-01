@@ -1,11 +1,10 @@
 {
   "name": "@allanoricil/canvasjs",
-  "version": "0.3.1",
-  "description": "Draw Database Schemas",
+  "version": "0.3.2",
+  "description": "Lib to work with Canvas using javascript",
   "main": "/dist/index.js",
   "module": "/dist/index.js",
   "browser": "/dist/index.js",
-  "homepage": "https://naughty-dijkstra-92979d.netlify.app/",
   "files": [
     "dist"
   ],
