@@ -1,6 +1,6 @@
 import Position from '../transforms/position.js';
 import Transform from '../transforms/transform.js';
-import EntityManager from './entityManager.js';
+import CanvasElementsManager from './canvasElementsManager.js';
 
 export default class Canvas {
 
@@ -35,7 +35,7 @@ export default class Canvas {
         options,
         canvas
     }) {
-        this._entityManager = new EntityManager();
+        this._canvasElementsManager = new CanvasElementsManager();
         this._dpi = window.devicePixelRatio;
         this._el = canvas || document.getElementById('canvas');
         this._el.style.maxHeight = 'none';
@@ -96,20 +96,20 @@ export default class Canvas {
         let _currentTransformedCursor = undefined;
         let _isCanvasBeingDragged = false;
         let _selectedEntities = [];
-        let _entityBeingDragged = null;
+        let _canvasElementBeingDragged = null;
         let _cancelClick = false;
-        let _entityBeingHovered = null;
+        let _canvasElementBeingHovered = null;
         
     
         this._el.addEventListener('mousedown', e => {
-            if (_entityBeingHovered) {
-                _entityBeingHovered._selected = true;
+            if (_canvasElementBeingHovered) {
+                _canvasElementBeingHovered._selected = true;
                 if (
                     this._canMoveEntities &&
-                    !_entityBeingDragged &&
-                    _entityBeingHovered._isDraggable
+                    !_canvasElementBeingDragged &&
+                    _canvasElementBeingHovered._isDraggable
                 ) {
-                    _entityBeingDragged = _entityBeingHovered;
+                    _canvasElementBeingDragged = _canvasElementBeingHovered;
                 }
                 return;
             }
@@ -127,44 +127,33 @@ export default class Canvas {
                 this._ctx.translate(_currentTransformedCursor.x - _dragStartPosition.x, _currentTransformedCursor.y - _dragStartPosition.y);
                 return;
             } else {
-                if (_entityBeingDragged) {
+                if (_canvasElementBeingDragged) {
                     _cancelClick = true;
-                    _entityBeingDragged.position = {
-                        x: _currentTransformedCursor.x - _entityBeingDragged.dimension.width / 2,
-                        y: _currentTransformedCursor.y - _entityBeingDragged.dimension.height / 2,
+                    _canvasElementBeingDragged.position = {
+                        x: _currentTransformedCursor.x - _canvasElementBeingDragged.dimension.width / 2,
+                        y: _currentTransformedCursor.y - _canvasElementBeingDragged.dimension.height / 2,
                     };
                     return;
                 } else {
-                    for (let i = this._entityManager.entities.length - 1; i >= 0; i--) {
-                        let entity = this._entityManager.entities[i];
+                    for (let i = this._canvasElementsManager.canvasElements.length - 1; i >= 0; i--) {
+                        let entity = this._canvasElementsManager.canvasElements[i];
                         if (entity.contains(this._mouse)) {
                             entity.emit('mousemove', e);
-                            _entityBeingHovered = entity;
+                            _canvasElementBeingHovered = entity;
                             this._el.style.cursor = 'grabbing';
                             if (!entity._hover) {
                                 entity._hover = true;
-                                this._el.dispatchEvent(
-                                    new CustomEvent('mouseenterentity', {
-                                        detail: entity,
-                                    })
-                                );
                                 entity.emit('mousehover', e);
-                                entity.emit('hover', e);
                             }
                             return;
                         } else {
                             if (entity._hover) {
                                 entity._hover = false;
-                                this._el.dispatchEvent(
-                                    new CustomEvent('mouseleaveentity', {
-                                        detail: entity,
-                                    })
-                                );
                                 entity.emit('mouseleave', e);
                             }
                         }
                     }
-                    _entityBeingHovered = null;
+                    _canvasElementBeingHovered = null;
                     this._el.style.cursor = 'default';
                 }
             }
@@ -174,9 +163,9 @@ export default class Canvas {
 
         this._el.addEventListener('mouseup', e => {
             _isCanvasBeingDragged = false;
-            if (_entityBeingDragged) {
-                _entityBeingDragged._selected = false;
-                _entityBeingDragged = null;
+            if (_canvasElementBeingDragged) {
+                _canvasElementBeingDragged._selected = false;
+                _canvasElementBeingDragged = null;
             }
         } ,{passive: true});
 
@@ -184,16 +173,16 @@ export default class Canvas {
             if (_cancelClick) {
                 _cancelClick = false;
             } else {
-                if (_entityBeingHovered) {
-                    _entityBeingHovered.emit('click');
-                    _entityBeingHovered._selected = true;
-                    this._el.dispatchEvent(_entityBeingHovered.createEvent('clickentity'));
+                if (_canvasElementBeingHovered) {
+                    _canvasElementBeingHovered.emit('click');
+                    _canvasElementBeingHovered._selected = true;
+                    this._el.dispatchEvent(_canvasElementBeingHovered.createEvent('clickentity'));
                     if (_selectedEntities.length === 0) {
-                        _selectedEntities.push(_entityBeingHovered);
+                        _selectedEntities.push(_canvasElementBeingHovered);
                     } else {
                         _selectedEntities.forEach(selectedEntity => {
-                            if (selectedEntity._id !== _entityBeingHovered._id) {
-                                _selectedEntities.push(_entityBeingHovered);
+                            if (selectedEntity._id !== _canvasElementBeingHovered._id) {
+                                _selectedEntities.push(_canvasElementBeingHovered);
                             }
                         });
                     }
@@ -250,7 +239,7 @@ export default class Canvas {
         this._el.addEventListener('mouseout', e => {
             _isCanvasBeingDragged = false;
             _selectedEntities = [];
-            _entityBeingDragged = null;
+            _canvasElementBeingDragged = null;
             _cancelClick = false;
         }, {passive: true});
 
@@ -260,8 +249,8 @@ export default class Canvas {
             const futureZoomLevel = this._ctx.getTransform().a * zoom;
 
             
-            if(_entityBeingHovered){
-                _entityBeingHovered.emit('wheel', e);
+            if(_canvasElementBeingHovered){
+                _canvasElementBeingHovered.emit('wheel', e);
                 return;
             }else{
                 if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
@@ -278,12 +267,12 @@ export default class Canvas {
                 this._mouse.x = e.touches[0].clientX;
                 this._mouse.y = e.touches[0].clientY;
 
-                for (let i = this._entityManager.entities.length - 1; i >= 0; i--) {
-                    let entity = this._entityManager.entities[i];
+                for (let i = this._canvasElementsManager.canvasElements.length - 1; i >= 0; i--) {
+                    let entity = this._canvasElementsManager.canvasElements[i];
                     if (entity.contains(this._mouse)) {
-                        _entityBeingHovered = entity;
-                        if (!_entityBeingDragged) {
-                            _entityBeingDragged = entity;
+                        _canvasElementBeingHovered = entity;
+                        if (!_canvasElementBeingDragged) {
+                            _canvasElementBeingDragged = entity;
                         }
                         this._el.dispatchEvent(
                             entity.createEvent('touchstartentity')
@@ -327,11 +316,11 @@ export default class Canvas {
                         _currentTransformedCursor.y - _previousTransformedCursor.y
                     );
                 } else {
-                    if (_entityBeingDragged) {
+                    if (_canvasElementBeingDragged) {
                         _cancelClick = true;
-                        _entityBeingDragged.position = {
-                            x: _currentTransformedCursor.x - _entityBeingDragged.dimension.width / 2,
-                            y: _currentTransformedCursor.y - _entityBeingDragged.dimension.height / 2
+                        _canvasElementBeingDragged.position = {
+                            x: _currentTransformedCursor.x - _canvasElementBeingDragged.dimension.width / 2,
+                            y: _currentTransformedCursor.y - _canvasElementBeingDragged.dimension.height / 2
                         };
                     }
                 }
@@ -341,8 +330,8 @@ export default class Canvas {
         },  {passive: true});
 
         this._el.addEventListener('touchend', e => {
-            if (_entityBeingDragged) {
-                _entityBeingDragged = null;
+            if (_canvasElementBeingDragged) {
+                _canvasElementBeingDragged = null;
             }
             _isCanvasBeingDragged = false;
             previousTouchEvent = null;
@@ -441,8 +430,8 @@ export default class Canvas {
 
     draw() {
         this.clearFrame();
-        this._entityManager.entities.forEach(entity => {
-            entity.draw(this._ctx);
+        this._canvasElementsManager.canvasElements.forEach(canvasElement => {
+            canvasElement.draw(this._ctx);
         });
     }
 
@@ -469,8 +458,8 @@ export default class Canvas {
         return this._mouse;
     }
 
-    get entityManager() {
-        return this._entityManager;
+    get canvasElementsManager() {
+        return this._canvasElementsManager;
     }
 
 }

@@ -4,20 +4,7 @@ import Padding from '../styles/padding.js';
 import Transform from '../transforms/transform.js';
 import EventEmitter from './eventEmitter.js';
 
-export default class Entity {
-
-    static get MAX_WIDTH() {
-        return 350;
-    }
-
-    static get PADDING() {
-        return new Padding({
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-        });
-    }
+export default class CanvasElement {
 
     constructor({
         name,
@@ -33,15 +20,16 @@ export default class Entity {
         this._selected = false;
         this._hover = false;
         this._transform = new Transform({
-            position: position || null,
-            dimension: dimension || null,
-            rotation: rotation || null
+            position: position || undefined,
+            dimension: dimension || undefined,
+            rotation: rotation || undefined
         });
-        this._oldPosition = position ? new Position(position) : null;
-        this._padding = padding ? new Padding(padding) : Entity.PADDING;
-        this._parent = parent;
+        this._oldPosition = position ? new Position(position) : undefined;
+        this._padding = padding ? new Padding(padding) : undefined;
+        this._parent = parent || undefined;
         this._children = [];
         this._canvas = canvas || undefined;
+        this._draw = true;
     }
 
     createEvent(event) {
@@ -50,9 +38,9 @@ export default class Entity {
         });
     }
 
-    contains(position) {
+    contains(point) {
         if(this._shape)
-            return this._canvas.ctx.isPointInPath(this._shape.path, position.x, position.y, 'nonzero');
+            return this._canvas.ctx.isPointInPath(this._shape.path, point.x, point.y, 'nonzero');
         else 
             return false;
     }

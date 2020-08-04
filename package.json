@@ -1,6 +1,6 @@
 {
   "name": "@allanoricil/canvasjs",
-  "version": "0.3.2",
+  "version": "0.4.8",
   "description": "Lib to work with Canvas using javascript",
   "main": "/dist/index.js",
   "module": "/dist/index.js",
@@ -11,7 +11,7 @@
   "scripts": {
     "minify": "babel index.js -d dist",
     "uglify": "uglifyjs dist/index.js -o dist/index.min.js -c -m",
-    "build": "npx webpack --config webpack.config.js",
+    "build": "npx webpack --config webpack.dev.config.js",
     "start": "npx webpack --watch --config webpack.dev.config.js"
   },
   "repository": {

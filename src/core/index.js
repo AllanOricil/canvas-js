@@ -1,8 +1,8 @@
 import Canvas from './canvas';
-import Entity from './entity';
+import CanvasElement from './canvasElement';
 
 
 export {
     Canvas,
-    Entity
+    CanvasElement
 };
