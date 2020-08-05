@@ -43,7 +43,6 @@ export default class Shape {
         border,
         shadow
     }) {
-
         this._transform = new Transform({
             position,
             dimension,
@@ -58,86 +57,46 @@ export default class Shape {
 
     draw(ctx) {
         if (this._shadow) {
-            ctx.shadowColor = this._shadow.color.rgba;
+            ctx.shadowColor = this._shadow._color.rgba;
             ctx.shadowBlur = this._shadow.blur;
             ctx.shadowOffsetX = this._shadow.offsetX;
             ctx.shadowOffsetY = this._shadow.offsetY;
         }
-        if(this._border && this._border.color)
-            ctx.strokeStyle = this._border.color.rgba;
+        if(this._border && this._border._color)
+            ctx.strokeStyle = this._border._color.rgba;
 
         if(this._border && this._border.lineWidth)
             ctx.lineWidth = this._border.lineWidth;
 
-        if(this._background && this._background.color)
-            ctx.fillStyle = this._background.color.rgba;
+        if(this._background && this._background._color)
+            ctx.fillStyle = this._background._color.rgba;
     }
 
     get sides() {
-        const middleWidth = this._transform.dimension.width / 2;
-        const middleHeight = this._transform.dimension.height / 2;
+        const middleWidth = this._transform._dimension.width / 2;
+        const middleHeight = this._transform._dimension.height / 2;
         return {
             top: {
-                x: this._transform.position.x + middleWidth,
-                y: this._transform.position.y
+                x: this._transform._position.x + middleWidth,
+                y: this._transform._position.y
             },
             right: {
-                x: this._transform.position.x + this._transform.dimension.width,
-                y: this._transform.position.y + middleHeight
+                x: this._transform._position.x + this._transform._dimension.width,
+                y: this._transform._position.y + middleHeight
             },
             bottom: {
-                x: this._transform.position.x + middleWidth,
-                y: this._transform.position.y + this._transform.dimension.height
+                x: this._transform._position.x + middleWidth,
+                y: this._transform._position.y + this._transform._dimension.height
             },
             left: {
-                x: this._transform.position.x,
-                y: this._transform.position.y + middleHeight
+                x: this._transform._position.x,
+                y: this._transform._position.y + middleHeight
             },
         };
     }
 
-    get path() {
-        return this._path;
-    }
-
-    set path(newValue) {
-        this._path = newValue;
-    }
-
-    get border() {
-        return this._border;
-    }
-
-    get background() {
-        return this._background;
-    }
-
-    get rotation() {
-        return this._transform.rotation;
-    }
-
     get rotate(){
-        return this._transform.rotation && this._transform.rotation.angle > 0;
+        return this._transform._rotation && this._transform._rotation.angle > 0;
     }
 
-    get shadow() {
-        return this._shadow;
-    }
-
-    set rotation(newValue) {
-        this._transform.rotation.angle = newValue;
-    }
-
-    get position() {
-        return this._transform.position;
-    }
-
-    set position(newValue) {
-        this._transform.position.x = newValue.x;
-        this._transform.position.y = newValue.y;
-    }
-
-    get dimension(){
-        return this._transform.dimension;
-    }
 }

@@ -14,24 +14,4 @@ export default class Line {
         this._dashed = dashed;
         this._lineCap = lineCap || 'round';
     }
-
-    get weight() {
-        return this._weight;
-    }
-
-    get color() {
-        return this._color;
-    }
-
-    get enableBezierCurves() {
-        return this._enableBezierCurves;
-    }
-
-    get dashed() {
-        return this._dashed;
-    }
-
-    get lineCap(){
-        return this._lineCap;
-    }
 }

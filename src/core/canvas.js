@@ -4,6 +4,8 @@ import CanvasElementsManager from './canvasElementsManager.js';
 
 export default class Canvas {
 
+    static get EVENT_LISTENER_LOOP_TIME(){ return 12; };
+
     static get SCALE() {
         return {
             horizontal: 1,
@@ -80,7 +82,7 @@ export default class Canvas {
             if ('OffscreenCanvas' in window) {
                 this._offscreenCanvas = this._el.transferControlToOffscreen();
             } else {
-                this._offscreenCanvas = new OffscreenCanvas(this._transform.dimension.width, this._transform.dimension.height);
+                this._offscreenCanvas = new OffscreenCanvas(this._transform._dimension.width, this._transform._dimension.height);
             }
             this._ctx = this._offscreenCanvas.getContext('2d');
         } else {
@@ -100,10 +102,8 @@ export default class Canvas {
         let _cancelClick = false;
         let _canvasElementBeingHovered = null;
         
-    
         this._el.addEventListener('mousedown', e => {
             if (_canvasElementBeingHovered) {
-                _canvasElementBeingHovered._selected = true;
                 if (
                     this._canMoveEntities &&
                     !_canvasElementBeingDragged &&
@@ -111,62 +111,58 @@ export default class Canvas {
                 ) {
                     _canvasElementBeingDragged = _canvasElementBeingHovered;
                 }
-                return;
+            }else{
+                _dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+                _isCanvasBeingDragged = true;
             }
-
-            _dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
-            _isCanvasBeingDragged = true;
         });
 
+        let startDateMouseMove = Date.now();
         this._el.addEventListener('mousemove', e => {
-            this._mouse.x = e.offsetX;
-            this._mouse.y = e.offsetY;
-            _currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
-            if (_isCanvasBeingDragged) {
-                this._el.style.cursor = 'grabbing';
-                this._ctx.translate(_currentTransformedCursor.x - _dragStartPosition.x, _currentTransformedCursor.y - _dragStartPosition.y);
-                return;
-            } else {
-                if (_canvasElementBeingDragged) {
-                    _cancelClick = true;
-                    _canvasElementBeingDragged.position = {
-                        x: _currentTransformedCursor.x - _canvasElementBeingDragged.dimension.width / 2,
-                        y: _currentTransformedCursor.y - _canvasElementBeingDragged.dimension.height / 2,
-                    };
-                    return;
+            if(Date.now() - startDateMouseMove >= Canvas.EVENT_LISTENER_LOOP_TIME){
+                this._mouse._x = e.offsetX;
+                this._mouse._y = e.offsetY;
+                _currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
+                if (_isCanvasBeingDragged) {
+                    this._el.style.cursor = 'grabbing';
+                    this._ctx.translate(_currentTransformedCursor.x - _dragStartPosition.x, _currentTransformedCursor.y - _dragStartPosition.y);
+                    this._isCurrentFrameDirty = true;
                 } else {
-                    for (let i = this._canvasElementsManager.canvasElements.length - 1; i >= 0; i--) {
-                        let entity = this._canvasElementsManager.canvasElements[i];
-                        if (entity.contains(this._mouse)) {
-                            entity.emit('mousemove', e);
-                            _canvasElementBeingHovered = entity;
-                            this._el.style.cursor = 'grabbing';
-                            if (!entity._hover) {
-                                entity._hover = true;
-                                entity.emit('mousehover', e);
+                    if (_canvasElementBeingDragged) {
+                        _cancelClick = true;
+                        _canvasElementBeingDragged.emit('mousedrag', this._mouse);
+                        this._isCurrentFrameDirty = true;
+                    } else {
+                        if(_canvasElementBeingHovered && _canvasElementBeingHovered.contains(this._mouse)){
+                            _canvasElementBeingHovered.emit('mousemove', this._mouse);
+                            this._isCurrentFrameDirty = true;
+                        }else{
+                            if(_canvasElementBeingHovered){
+                                _canvasElementBeingHovered.emit('mouseleave', this._mouse);
+                                _canvasElementBeingHovered = null;
+                                this._isCurrentFrameDirty = true;
                             }
-                            return;
-                        } else {
-                            if (entity._hover) {
-                                entity._hover = false;
-                                entity.emit('mouseleave', e);
+                            this._el.style.cursor = 'default';
+                            for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
+                                let canvasElement = this._canvasElementsManager._reactiveCanvasElements[i];
+                                if (canvasElement.contains(this._mouse)) {
+                                    this._el.style.cursor = 'grabbing';
+                                    _canvasElementBeingHovered = canvasElement;
+                                    canvasElement.emit('mouseenter', this._mouse);
+                                    this._isCurrentFrameDirty = true;
+                                    break;
+                                }
                             }
                         }
                     }
-                    _canvasElementBeingHovered = null;
-                    this._el.style.cursor = 'default';
                 }
+                startDateMouseMove = Date.now();
             }
-
-            this._el.style.cursor = 'default';
         });
 
         this._el.addEventListener('mouseup', e => {
             _isCanvasBeingDragged = false;
-            if (_canvasElementBeingDragged) {
-                _canvasElementBeingDragged._selected = false;
-                _canvasElementBeingDragged = null;
-            }
+            _canvasElementBeingDragged = null;
         } ,{passive: true});
 
         this._el.addEventListener('click', e => {
@@ -248,24 +244,25 @@ export default class Canvas {
             const zoom = e.wheelDelta > 0 || e.deltaY < 0 ? (1 + this._scaleLimits.speed) : (1 - this._scaleLimits.speed);
             const futureZoomLevel = this._ctx.getTransform().a * zoom;
 
-            
             if(_canvasElementBeingHovered){
                 _canvasElementBeingHovered.emit('wheel', e);
-                return;
+                this._isCurrentFrameDirty = true;
             }else{
                 if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
                     this._ctx.translate(_currentTransformedCursor.x, _currentTransformedCursor.y);
                     this._ctx.scale(zoom, zoom);
                     this._ctx.translate(-_currentTransformedCursor.x, -_currentTransformedCursor.y);
+                    this._isCurrentFrameDirty = true;
                 }
             }
+
         },  {passive: true});
 
         let previousTouchStartTimestamp = null;
         this._el.addEventListener('touchstart', e => {
             if (e.touches.length === 1) {
-                this._mouse.x = e.touches[0].clientX;
-                this._mouse.y = e.touches[0].clientY;
+                this._mouse._x = e.touches[0].clientX;
+                this._mouse._y = e.touches[0].clientY;
 
                 for (let i = this._canvasElementsManager.canvasElements.length - 1; i >= 0; i--) {
                     let entity = this._canvasElementsManager.canvasElements[i];
@@ -302,9 +299,9 @@ export default class Canvas {
         this._el.addEventListener('touchmove', e => {
             console.log('TOUCH MOVE');
             if (e.touches.length === 1) {
-                this._mouse.x = e.touches[0].clientX;
-                this._mouse.y = e.touches[0].clientY;
-                _currentTransformedCursor = this.getTransformedPoint(this._mouse.x, this._mouse.y);
+                this._mouse._x = e.touches[0].clientX;
+                this._mouse._y = e.touches[0].clientY;
+                _currentTransformedCursor = this.getTransformedPoint(this._mouse._x, this._mouse._y);
                 if (_isCanvasBeingDragged && previousTouchEvent) {
                     let _previousTransformedCursor = 
                         this.getTransformedPoint(
@@ -319,8 +316,8 @@ export default class Canvas {
                     if (_canvasElementBeingDragged) {
                         _cancelClick = true;
                         _canvasElementBeingDragged.position = {
-                            x: _currentTransformedCursor.x - _canvasElementBeingDragged.dimension.width / 2,
-                            y: _currentTransformedCursor.y - _canvasElementBeingDragged.dimension.height / 2
+                            x: _currentTransformedCursor.x - _canvasElementBeingDragged._transform._dimension.width / 2,
+                            y: _currentTransformedCursor.y - _canvasElementBeingDragged._transform._dimension.height / 2
                         };
                     }
                 }
@@ -399,20 +396,32 @@ export default class Canvas {
 
 
         const resizeClientWindow = e => {
-            this._transform.dimension.width = this._el.parentElement.clientWidth;
-            this._transform.dimension.height = this._el.parentElement.clientHeight;
+            this._transform._dimension.width = this._el.parentElement.clientWidth;
+            this._transform._dimension.height = this._el.parentElement.clientHeight;
             if (this._offscreenCanvas) {
-                this._offscreenCanvas.width = this._transform.dimension.width;
-                this._offscreenCanvas.height = this._transform.dimension.height;
+                this._offscreenCanvas.width = this._transform._dimension.width;
+                this._offscreenCanvas.height = this._transform._dimension.height;
             } else {
-                this._el.width = this._transform.dimension.width;
-                this._el.height = this._transform.dimension.height;
+                this._el.width = this._transform._dimension.width;
+                this._el.height = this._transform._dimension.height;
             }
+
+            this.draw();
         };
 
         window.onresize = resizeClientWindow;
 
+        this._isCurrentFrameDirty = true;
         this.start();
+    }
+
+    start(){
+        setInterval(()=>{
+            if(this._isCurrentFrameDirty){
+                this.draw();
+                this._isCurrentFrameDirty = false;
+            }
+        }, 1000/this._fps);
     }
 
     clearFrame() {
@@ -422,15 +431,9 @@ export default class Canvas {
         this._ctx.restore();
     }
 
-    start(){
-        setInterval(()=>{
-            this.draw();
-        }, 1000 / this._fps);
-    }
-
     draw() {
         this.clearFrame();
-        this._canvasElementsManager.canvasElements.forEach(canvasElement => {
+        this._canvasElementsManager._canvasElementsToDraw.forEach(canvasElement => {
             canvasElement.draw(this._ctx);
         });
     }
@@ -450,12 +453,24 @@ export default class Canvas {
         link.click();
     }
 
-    get ctx() {
-        return this._ctx;
+    saveAsImage2(name) {
+        const canvasOutput = document.createElement('canvas');
+        canvasOutput.width = 10 * this._el.width;
+        canvasOutput.height = 10 * this._el.height;
+        const ctxOutput = canvasOutput.getContext('2d');
+        const currentTransform = this._ctx.getTransform();
+        this._ctx.setTransform(1, 0 , 0, 1, 0, 0);
+        ctxOutput.drawImage(this._el, 0, 0);
+        this._ctx.setTransform(currentTransform);
+        const link = document.createElement('a');
+        link.download = `canvas.png`;
+        link.href = canvasOutput.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        link.click();
     }
 
-    get mouse() {
-        return this._mouse;
+
+    get ctx() {
+        return this._ctx;
     }
 
     get canvasElementsManager() {

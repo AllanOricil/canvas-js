@@ -12,7 +12,8 @@ export default class CanvasElement {
         dimension,
         position,
         rotation,
-        parent
+        parent,
+        nonReactiveToIO,
     }, canvas) {
         this._eventEmitter = new EventEmitter();
         this._id = +new Date() + Math.random() * 100000;
@@ -24,12 +25,12 @@ export default class CanvasElement {
             dimension: dimension || undefined,
             rotation: rotation || undefined
         });
-        this._oldPosition = position ? new Position(position) : undefined;
-        this._padding = padding ? new Padding(padding) : undefined;
+        this._padding = padding ? new Padding(padding) : new Padding({ left: 0, top: 0, right: 0, bottom: 0});
         this._parent = parent || undefined;
         this._children = [];
         this._canvas = canvas || undefined;
         this._draw = true;
+        this._reactToIoEvents = nonReactiveToIO || true;
     }
 
     createEvent(event) {
@@ -39,8 +40,8 @@ export default class CanvasElement {
     }
 
     contains(point) {
-        if(this._shape)
-            return this._canvas.ctx.isPointInPath(this._shape.path, point.x, point.y, 'nonzero');
+        if(this._shape && this._shape._path)
+            return this._canvas.ctx.isPointInPath(this._shape._path, point.x, point.y, 'nonzero');
         else 
             return false;
     }
@@ -64,44 +65,11 @@ export default class CanvasElement {
         this._eventEmitter.emit(event, data);
     }
 
-    set state(newState) {
-        if (this.states.includes(newState))
-            this.emit(newState, {
-                detail: this
-            });
+    set position({x, y}) {
+        this._transform.position = {x, y};
+        if(this._shape){
+            this._shape._transform.position = {x, y};
+        }
     }
 
-    get shape() {
-        return this._shape;
-    }
-
-    get padding() {
-        return this._padding;
-    }
-
-    get dimension() {
-        return this._transform.dimension;
-    }
-
-    get position() {
-        return this._transform.position;
-    }
-
-    get children() {
-        return this._children;
-    }
-
-    get parent() {
-        return this._parent;
-    }
-
-    set position(newValue) {
-        this._oldPosition = new Position(this._transform.position);
-        this._transform.position.x = newValue.x;
-        this._transform.position.y = newValue.y;
-    }
-
-    get oldPosition() {
-        return this._oldPosition;
-    }
 }

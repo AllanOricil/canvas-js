@@ -51,36 +51,8 @@ export default class Font {
         return `${this._style || ''} ${this._variant || ''} ${this._weight || ''} ${this._size ? this._size + 'px' : ''} ${this._family || ''}`;
     }
 
-    get family() {
-        return this._family;
-    }
-
-    get style() {
-        return this._style;
-    }
-
-    get variant() {
-        return this._variant;
-    }
-
-    get color() {
-        return this._color;
-    }
-
     set color(newColor){
         this._color = new Color(newColor);
-    }
-
-    get size() {
-        return this._size;
-    }
-
-    get weight() {
-        return this._weight;
-    }
-
-    get dimensions() {
-        return this._dimensions;
     }
 
     _setFontDimensions() {

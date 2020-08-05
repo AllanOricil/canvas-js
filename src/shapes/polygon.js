@@ -19,17 +19,17 @@ export default class Polygon extends Shape {
             shadow
         });
 
-        this._points = points;
+        this._points = points || [];
     }
 
     draw(ctx) {
         ctx.save();
         super.draw(ctx);
         if(this.rotate){
-            const rotateFromX = this._position.x + this._dimension.width / 2;
-            const rotateFromY = this._position.y + this._dimension.height / 2;
+            const rotateFromX = this._transform._position.x + this._transform._dimension.width / 2;
+            const rotateFromY = this._transform._position.y + this._transform._dimension.height / 2;
             ctx.translate(rotateFromX, rotateFromY);
-            ctx.rotate(this.rotation.angle);
+            ctx.rotate(this._transform._rotation.angle);
             ctx.translate(-rotateFromX,- rotateFromY);
         }
         this._path = new Path2D();

@@ -16,7 +16,7 @@ export default class CanvasImage {
             scale
         });
         if(dimension)
-            this._image = new Image(this._transform.dimension.width, this._transform.dimension.height);
+            this._image = new Image(this._transform._dimension.width, this._transform._dimension.height);
         else
             this._image = new Image();
         this._src = src;
@@ -32,24 +32,20 @@ export default class CanvasImage {
         this._loaded = false;
     }
 
-    get transform() {
-        return this._transform;
-    }
-
     draw(ctx){
-        if(this._transform.dimension)
+        if(this._transform._dimension)
             ctx.drawImage(
                 this._image,
-                this._transform.position.x,
-                this._transform.position.y,
-                this._transform.dimension.width,
-                this._transform.dimension.height
+                this._transform._position.x,
+                this._transform._position.y,
+                this._transform._dimension.width,
+                this._transform._dimension.height
             );
         else
             ctx.drawImage(
                 this._image,
-                this._transform.position.x,
-                this._transform.position.y
+                this._transform._position.x,
+                this._transform._position.y
             );
     }
 }

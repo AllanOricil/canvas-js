@@ -24,15 +24,15 @@ export default class Triangle extends Shape {
         ctx.save();
         super.draw(ctx);
         if(this.rotate){
-            ctx.translate(this.position.x, this.position.y);
-            ctx.rotate(this.rotation.angle);
-            ctx.translate(-this.position.x,- this.position.y);
+            ctx.translate(this._transform._position.x, this._transform._position.y);
+            ctx.rotate(this._transform._rotation.angle);
+            ctx.translate(-this._transform._position.x,- this._transform._position.y);
         }
         this._path = new Path2D();
         ctx.beginPath();
-        this._path.moveTo(this.position.x, this.position.y);
-        this._path.lineTo(this.position.x - this.dimension.width, this.position.y - this.dimension.height / 2);
-        this._path.lineTo(this.position.x - this.dimension.width, this.position.y + this.dimension.height / 2);
+        this._path.moveTo(this._transform._position.x, this._transform._position.y);
+        this._path.lineTo(this._transform._position.x - this._transform._dimension.width, this._transform._position.y - this._transform._dimension.height / 2);
+        this._path.lineTo(this._transform._position.x - this._transform._dimension.width, this._transform._position.y + this._transform._dimension.height / 2);
         this._path.closePath();
 
         ctx.stroke(this._path);

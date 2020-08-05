@@ -13,23 +13,7 @@ export default class Shadow {
         this._blur = blur;
     }
 
-    get offsetX() {
-        return this._offsetX;
-    }
-
-    get offsetY() {
-        return this._offsetY;
-    }
-
-    get color() {
-        return this._color;
-    }
-
     set color(newColor){
         this._color = new Color(newColor);
-    }
-
-    get blur() {
-        return this._blur;
     }
 }

@@ -15,12 +15,4 @@ export default class Position {
     get y() {
         return parseInt(this._y ? this._y.toFixed(0): 0);
     }
-
-    set x(newValue) {
-        this._x = newValue;
-    }
-
-    set y(newValue) {
-        this._y = newValue;
-    }
 }

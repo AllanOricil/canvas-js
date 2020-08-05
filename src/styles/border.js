@@ -20,35 +20,7 @@ export default class Border {
         }) : null;
     }
 
-    get radius() {
-        return this._radius;
-    }
-
-    set radius(newValue) {
-        this._radius = newValue;
-    }
-
-    get color() {
-        return this._color;
-    }
-
     set color(newColor) {
         this._color = new Color(newColor);
-    }
-
-    get selected() {
-        return this._selected;
-    }
-
-    get hover() {
-        return this._hover;
-    }
-
-    get lineWidth() {
-        return this._lineWidth;
-    }
-
-    set lineWidth(newLineWidth){
-        this._lineWidth = newLineWidth;
     }
 }

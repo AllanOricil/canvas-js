@@ -6,6 +6,9 @@ export default class CanvasElementsManager {
             this._canvasElementMap.set(layer, new Map());
         });
         this._canvasElementLayerMap = new Map();
+
+        this._canvasElementsToDraw = [];
+        this._reactiveCanvasElements = [];
     }
 
     getLayer(z) {
@@ -27,6 +30,7 @@ export default class CanvasElementsManager {
         const layer = this.getLayer(entity._z || 0);
         layer.set(entity._name, entity);
         this._canvasElementLayerMap.set(entity._name, entity._z);
+        this._setReactiveAndToDrawCanvasElements();
     }
 
     removeCanvasElementByName(name) {
@@ -43,13 +47,14 @@ export default class CanvasElementsManager {
         return this.getLayer(z).values();
     }
 
-    get canvasElements() {
-        let canvasElementsToDraw = [];
+    _setReactiveAndToDrawCanvasElements(){
+        this._reactiveCanvasElements = [];
+        this._canvasElementsToDraw = [];
         for (let [layer, layerCanvasElements] of this._canvasElementMap.entries()) {
             layerCanvasElements.forEach(canvasElement => {
-                if(canvasElement._draw) canvasElementsToDraw.push(canvasElement);
+                if(canvasElement._draw) this._canvasElementsToDraw.push(canvasElement);
+                if(canvasElement._reactToIoEvents) this._reactiveCanvasElements.push(canvasElement);
             });
         }
-        return canvasElementsToDraw;
     }
 }

@@ -38,42 +38,50 @@ export default class Transform {
         rotation,
         scale
     }) {
-        this._position = position ? position : Transform.POSITION;
+        this._position = position ? new Position(position) : Transform.POSITION;
         this._dimension = dimension ? new Dimension(dimension) : Transform.DIMENSION;
         this._rotation = rotation ? new Rotation(rotation) : Transform.ROTATION;
         this._scale = scale ? new Scale(scale) : Transform.SCALE;
+
+        this._oldPosition = new Position(this._position);
+        this._oldDimension = new Dimension(this._dimension);
+        this._oldRotation = new Rotation(this._rotation) ;
+        this._oldScale = new Scale(this._scale);
     }
 
-    get position() {
-        return this._position;
+    set position({x, y}) {
+        this._oldPosition._x = this._position._x;
+        this._oldPosition._y = this._position._y;
+        this._position._x = x;
+        this._position._y = y;
     }
 
-    get dimension() {
-        return this._dimension;
+    set dimension({width, height}) {
+        this._oldDimension.width = this._dimension._width;
+        this._oldDimension.height = this._dimension._height;
+        this._dimension.width = width;
+        this._dimension.height = height;
     }
 
-    get rotation() {
-        return this._rotation;
+    set rotation({angle}) {
+        this._oldRotation._angle = this._rotation._angle;
+        this._rotation._angle = angle;
     }
 
-    get scale() {
-        return this._scale;
+    set scale({horizontal, vertical}) {
+        this._oldScale._horizontal = this._scale._horizontal;
+        this._oldScale._vertical = this._scale._vertical;
+        this._scale._horizontal = horizontal;
+        this._scale._vertical = vertical;
     }
 
-    set position(newValue) {
-        this._position = newValue;
-    }
-
-    set dimension(newValue) {
-        this._dimension = newValue;
-    }
-
-    set rotation(newValue) {
-        this._rotation = newValue;
-    }
-
-    set scale(newValue) {
-        this._scale = newValue;
+    get oldTransform(){
+        return {
+            position: this._oldPosition,
+            dimension: this._oldDimension,
+            rotation: this._oldRotation,
+            scale: this._oldScale
+        };
     }
 
 }

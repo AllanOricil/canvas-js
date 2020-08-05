@@ -8,19 +8,19 @@ export default class Dimension {
         this._height = height;
     }
 
-    get width() {
+    get width(){
         return this._width;
     }
 
-    get height() {
+    get height(){
         return this._height;
     }
 
-    set width(newValue) {
-        this._width = newValue;
+    set width(newWidth){
+        this._width = newWidth;
     }
 
-    set height(newValue) {
-        this._height = newValue;
+    set height(newHeight){
+        this._height = newHeight;
     }
 }

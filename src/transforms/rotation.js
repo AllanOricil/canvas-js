@@ -12,15 +12,7 @@ export default class Rotation {
         });
     }
 
-    get angle() {
+    get angle(){
         return this._angle;
-    }
-
-    set angle(newValue) {
-        this._angle = newValue;
-    }
-
-    get referential() {
-        return this._referential;
     }
 }
