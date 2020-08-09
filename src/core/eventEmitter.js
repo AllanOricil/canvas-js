@@ -10,20 +10,13 @@ export default class EventEmitter {
 
     emit(event, data) {
         let cbs = this.callbacks[event];
-        const promisses = [];
+        
 
         if (cbs) {
             cbs.forEach(cb => {
-                promisses.push(
-                    new Promise((resolve, reject) => {
-                        cb(data);
-
-                        resolve();
-                    })
-                );
+                cb(data);
             });
 
-            Promise.all(promisses);
         }
     }
 }

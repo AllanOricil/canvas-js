@@ -15,6 +15,7 @@ export default class CanvasElement {
         parent,
         nonReactiveToIO,
     }, canvas) {
+        if(!name) throw new Error('Attribute name is Required.');
         this._eventEmitter = new EventEmitter();
         this._id = +new Date() + Math.random() * 100000;
         this._name = name;
@@ -25,7 +26,7 @@ export default class CanvasElement {
             dimension: dimension || undefined,
             rotation: rotation || undefined
         });
-        this._padding = padding ? new Padding(padding) : new Padding({ left: 0, top: 0, right: 0, bottom: 0});
+        this._padding = padding ? new Padding(padding) : Padding.NONE;
         this._parent = parent || undefined;
         this._children = [];
         this._canvas = canvas || undefined;

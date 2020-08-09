@@ -4,15 +4,15 @@ import {
 } from '../utils/font.js';
 export default class Font {
 
-    static get FONT(){
-        return {
+    static get ARIAL(){
+        return new Font({
             family: 'Arial',
             style: 'normal',
             variant: 'normal',
-            color: 'rgb(212,212,212)',
-            size: 50,
-            weight: 'bold',
-        };
+            color: 'black',
+            size: 15,
+            weight: 'normal'
+        });
     }
 
     constructor({

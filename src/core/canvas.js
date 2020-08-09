@@ -4,8 +4,6 @@ import CanvasElementsManager from './canvasElementsManager.js';
 
 export default class Canvas {
 
-    static get EVENT_LISTENER_LOOP_TIME(){ return 12; };
-
     static get SCALE() {
         return {
             horizontal: 1,
@@ -25,10 +23,6 @@ export default class Canvas {
         return 60;
     }
 
-    static get CANMOVEENTITIES() {
-        return true;
-    }
-
     static get CANDRAGCANVAS() {
         return true;
     }
@@ -46,8 +40,8 @@ export default class Canvas {
         this._el.style.backgroundImage = options.backgroundImage;
         this._el.style.backgroundColor = options.background && options.background.color ? options.background.color : null;
         this._fps = options.fps ? options.fps : Canvas.FPS;
-        this._canMoveEntities = options.canMoveEntities !== false;
-        this._canDragCanvas = options.canDragCanvas ? options.canDragCanvas : Canvas.CANDRAGCANVAS;
+        this._canMoveCanvasElements = options.canMoveCanvasElements !== false;
+        this._canDragCanvas = options.canDragCanvas !== false;
         this._mouse = new Position({
             x: 0,
             y: 0
@@ -90,10 +84,6 @@ export default class Canvas {
         }
 
         this._isScrolling = false;
-        this._tickTime = 0;
-        this._updateTime = 0;
-        this._drawTime = 0;
-
         let _dragStartPosition = {x: 0, y: 0};
         let _currentTransformedCursor = undefined;
         let _isCanvasBeingDragged = false;
@@ -104,22 +94,25 @@ export default class Canvas {
         
         this._el.addEventListener('mousedown', e => {
             if (_canvasElementBeingHovered) {
+                _canvasElementBeingHovered.emit('mousedown', e);
                 if (
-                    this._canMoveEntities &&
+                    this._canMoveCanvasElements &&
                     !_canvasElementBeingDragged &&
                     _canvasElementBeingHovered._isDraggable
                 ) {
                     _canvasElementBeingDragged = _canvasElementBeingHovered;
                 }
             }else{
-                _dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
-                _isCanvasBeingDragged = true;
+                if(this._canDragCanvas){
+                    _dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+                    _isCanvasBeingDragged = true;
+                }
             }
         });
 
-        let startDateMouseMove = Date.now();
+        let start = Date.now();
         this._el.addEventListener('mousemove', e => {
-            if(Date.now() - startDateMouseMove >= Canvas.EVENT_LISTENER_LOOP_TIME){
+            if(Date.now() - start >= 12){
                 this._mouse._x = e.offsetX;
                 this._mouse._y = e.offsetY;
                 _currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
@@ -140,7 +133,6 @@ export default class Canvas {
                             if(_canvasElementBeingHovered){
                                 _canvasElementBeingHovered.emit('mouseleave', this._mouse);
                                 _canvasElementBeingHovered = null;
-                                this._isCurrentFrameDirty = true;
                             }
                             this._el.style.cursor = 'default';
                             for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
@@ -149,21 +141,24 @@ export default class Canvas {
                                     this._el.style.cursor = 'grabbing';
                                     _canvasElementBeingHovered = canvasElement;
                                     canvasElement.emit('mouseenter', this._mouse);
-                                    this._isCurrentFrameDirty = true;
                                     break;
                                 }
                             }
+                            this._isCurrentFrameDirty = true;
                         }
                     }
                 }
-                startDateMouseMove = Date.now();
+                start = Date.now();
             }
         });
 
         this._el.addEventListener('mouseup', e => {
+            if(_canvasElementBeingDragged) {
+                _canvasElementBeingDragged.emit('mouseup', e);
+                _canvasElementBeingDragged = null;
+            }
             _isCanvasBeingDragged = false;
-            _canvasElementBeingDragged = null;
-        } ,{passive: true});
+        });
 
         this._el.addEventListener('click', e => {
             if (_cancelClick) {
@@ -171,91 +166,38 @@ export default class Canvas {
             } else {
                 if (_canvasElementBeingHovered) {
                     _canvasElementBeingHovered.emit('click');
-                    _canvasElementBeingHovered._selected = true;
                     this._el.dispatchEvent(_canvasElementBeingHovered.createEvent('clickentity'));
-                    if (_selectedEntities.length === 0) {
-                        _selectedEntities.push(_canvasElementBeingHovered);
-                    } else {
-                        _selectedEntities.forEach(selectedEntity => {
-                            if (selectedEntity._id !== _canvasElementBeingHovered._id) {
-                                _selectedEntities.push(_canvasElementBeingHovered);
-                            }
-                        });
-                    }
-
-                    if (_selectedEntities.length == 2) {
-                        let secondSelectedEntity = _selectedEntities.pop();
-                        let firstdSelectedEntity = _selectedEntities.pop();
-
-                        //this avoids bidirectional connection
-                        let conetionAlreadyExists = false;
-                        //verify connection from -> to
-                        for (
-                            let i = 0; i < firstdSelectedEntity.connections.length; i++
-                        ) {
-                            let connection =
-                                firstdSelectedEntity.connections[i];
-                            if (
-                                connection.to._id ===
-                                secondSelectedEntity._id
-                            ) {
-                                conetionAlreadyExists = true;
-                                break;
-                            }
-                        }
-
-                        //verify connection to -> from
-                        for (
-                            let i = 0; i < secondSelectedEntity.connections.length; i++
-                        ) {
-                            let connection =
-                                secondSelectedEntity.connections[i];
-                            if (
-                                connection.to._id ===
-                                firstdSelectedEntity._id
-                            ) {
-                                conetionAlreadyExists = true;
-                                break;
-                            }
-                        }
-
-                        /*if (!conetionAlreadyExists) {
-                            firstdSelectedEntity.addConnection({
-                                to: secondSelectedEntity,
-                            });
-                        }*/
-                        _selectedEntities = [];
-                    }
-                    return;
+                    this._isCurrentFrameDirty = true;
                 }
             }
-
-        },  {passive: true});
+        });
 
         this._el.addEventListener('mouseout', e => {
             _isCanvasBeingDragged = false;
             _selectedEntities = [];
             _canvasElementBeingDragged = null;
             _cancelClick = false;
-        }, {passive: true});
-
+        });
+        
         this._el.addEventListener('wheel', e => {
-            _currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
-            const zoom = e.wheelDelta > 0 || e.deltaY < 0 ? (1 + this._scaleLimits.speed) : (1 - this._scaleLimits.speed);
-            const futureZoomLevel = this._ctx.getTransform().a * zoom;
+            if(Date.now() - start >= 12){
+                _currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
+                const zoom = e.wheelDelta > 0 || e.deltaY < 0 ? (1 + this._scaleLimits.speed) : (1 - this._scaleLimits.speed);
+                const futureZoomLevel = this._ctx.getTransform().a * zoom;
 
-            if(_canvasElementBeingHovered){
-                _canvasElementBeingHovered.emit('wheel', e);
-                this._isCurrentFrameDirty = true;
-            }else{
-                if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
-                    this._ctx.translate(_currentTransformedCursor.x, _currentTransformedCursor.y);
-                    this._ctx.scale(zoom, zoom);
-                    this._ctx.translate(-_currentTransformedCursor.x, -_currentTransformedCursor.y);
-                    this._isCurrentFrameDirty = true;
+                if(_canvasElementBeingHovered){
+                    _canvasElementBeingHovered.emit('wheel', e);
+                }else{
+                    if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
+                        this._ctx.translate(_currentTransformedCursor.x, _currentTransformedCursor.y);
+                        this._ctx.scale(zoom, zoom);
+                        this._ctx.translate(-_currentTransformedCursor.x, -_currentTransformedCursor.y);
+                        this._isCurrentFrameDirty = true;
+                    }
                 }
+                start = Date.now();
+                this._isCurrentFrameDirty = true;
             }
-
         },  {passive: true});
 
         let previousTouchStartTimestamp = null;
@@ -394,7 +336,6 @@ export default class Canvas {
         this._el.onpointerout = pointerup_handler;
         this._el.onpointerleave = pointerup_handler;
 
-
         const resizeClientWindow = e => {
             this._transform._dimension.width = this._el.parentElement.clientWidth;
             this._transform._dimension.height = this._el.parentElement.clientHeight;
@@ -405,12 +346,10 @@ export default class Canvas {
                 this._el.width = this._transform._dimension.width;
                 this._el.height = this._transform._dimension.height;
             }
-
-            this.draw();
+            this._isCurrentFrameDirty = true;
         };
 
         window.onresize = resizeClientWindow;
-
         this._isCurrentFrameDirty = true;
         this.start();
     }
@@ -422,20 +361,19 @@ export default class Canvas {
                 this._isCurrentFrameDirty = false;
             }
         }, 1000/this._fps);
+        this.draw();
     }
 
-    clearFrame() {
+    draw() {
         this._ctx.save();
         this._ctx.setTransform(1,0,0,1,0,0);
         this._ctx.clearRect(0,0, this._el.width, this._el.height);
         this._ctx.restore();
-    }
-
-    draw() {
-        this.clearFrame();
-        this._canvasElementsManager._canvasElementsToDraw.forEach(canvasElement => {
+        const canvasElementsToDraw =  this._canvasElementsManager._canvasElementsToDraw;
+        for(let i = 0; i < canvasElementsToDraw.length; i++){
+            const canvasElement = canvasElementsToDraw[i];
             canvasElement.draw(this._ctx);
-        });
+        }
     }
 
     getTransformedPoint(x, y) {

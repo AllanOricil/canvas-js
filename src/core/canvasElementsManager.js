@@ -21,12 +21,10 @@ export default class CanvasElementsManager {
 
     getCanvasElementByName(name) {
         const layer = this.getCanvasElementLayerByName(name);
-        const entity = layer.get(name);
-        return entity;
+        return layer ? layer.get(name) : null;
     }
 
-    addCanvasElement(entity, canvas) {
-        entity._canvas = canvas;
+    addCanvasElement(entity) {
         const layer = this.getLayer(entity._z || 0);
         layer.set(entity._name, entity);
         this._canvasElementLayerMap.set(entity._name, entity._z);
@@ -45,6 +43,13 @@ export default class CanvasElementsManager {
 
     getCanvasElementsInLayer(z){
         return this.getLayer(z).values();
+    }
+
+    moveCanvasElementToLayer(canvasElement, newLayer){
+        this.removeCanvasElementByName(canvasElement._name);
+        canvasElement._z = newLayer;
+        this.addCanvasElement(canvasElement);
+        this._setReactiveAndToDrawCanvasElements();
     }
 
     _setReactiveAndToDrawCanvasElements(){

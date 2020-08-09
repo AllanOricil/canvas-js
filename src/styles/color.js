@@ -157,7 +157,7 @@ export default class Color {
     };
 
     static isRGBA(color) {
-        return color.match(/^rgba\((\d+),(\d+),(\d+),(\d+\.\d+)\)$/gi) !== null;
+        return color.match(/^(rgba\(\s*(\d*)\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*([0|1].?\d*)\s*\))$/gi) !== null;
     };
 
     static isHEX(color) {

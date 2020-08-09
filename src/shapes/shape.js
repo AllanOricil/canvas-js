@@ -12,25 +12,12 @@ export default class Shape {
         });
     }
 
-    static get BACKGROUND() {
-        return new Background({
-            color: 'rgb(255,255,255)',
-        });
-    }
-
     static get SHADOW() {
         return new Shadow({
             offsetX: 0,
             offsetY: 0,
             color: 'rgb(0,0,0)',
             blur: 0
-        });
-    }
-
-    static get BORDER() {
-        return new Border({
-            radius: 0,
-            lineWidth: 1
         });
     }
 
@@ -49,8 +36,8 @@ export default class Shape {
             rotation,
             scale
         });
-        this._border = border ? new Border(border) : Shape.BORDER;
-        this._background = background ? new Background(background) : Shape.BACKGROUND;
+        this._border = border ? new Border(border) : Border.SMALL;
+        this._background = background ? new Background(background) : Background.TRANSPARENT;
         this._shadow = shadow ?  new Shadow(shadow) : null;
         this._path = null;
     }

@@ -1,5 +1,13 @@
 import Color from './color.js';
 export default class Border {
+
+    static get SMALL(){
+        return new Border({
+            radius: 0,
+            lineWidth: 1
+        });
+    }
+
     constructor({
         radius,
         color,

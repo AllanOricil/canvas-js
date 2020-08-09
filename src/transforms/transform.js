@@ -50,29 +50,29 @@ export default class Transform {
     }
 
     set position({x, y}) {
-        this._oldPosition._x = this._position._x;
-        this._oldPosition._y = this._position._y;
-        this._position._x = x;
-        this._position._y = y;
+        this._oldPosition._x = Math.floor(this._position._x);
+        this._oldPosition._y = Math.floor(this._position._y);
+        this._position._x = Math.floor(x);
+        this._position._y = Math.floor(y);
     }
 
     set dimension({width, height}) {
-        this._oldDimension.width = this._dimension._width;
-        this._oldDimension.height = this._dimension._height;
-        this._dimension.width = width;
-        this._dimension.height = height;
+        this._oldDimension.width = Math.floor(this._dimension._width);
+        this._oldDimension.height = Math.floor(this._dimension._height);
+        this._dimension.width = Math.floor(width);
+        this._dimension.height = Math.floor(height);
     }
 
     set rotation({angle}) {
-        this._oldRotation._angle = this._rotation._angle;
-        this._rotation._angle = angle;
+        this._oldRotation._angle = Math.floor(this._rotation._angle);
+        this._rotation._angle = Math.floor(angle);
     }
 
     set scale({horizontal, vertical}) {
-        this._oldScale._horizontal = this._scale._horizontal;
-        this._oldScale._vertical = this._scale._vertical;
-        this._scale._horizontal = horizontal;
-        this._scale._vertical = vertical;
+        this._oldScale._horizontal = Math.floor(this._scale._horizontal);
+        this._oldScale._vertical = Math.floor(this._scale._vertical);
+        this._scale._horizontal = Math.floor(horizontal);
+        this._scale._vertical = Math.floor(vertical);
     }
 
     get oldTransform(){
