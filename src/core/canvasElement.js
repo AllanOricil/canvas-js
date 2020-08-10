@@ -15,7 +15,7 @@ export default class CanvasElement {
         parent,
         nonReactiveToIO,
     }, canvas) {
-        if(!name) throw new Error('Attribute name is Required.');
+        if(!name) throw new Error('Every Canvas Element must have a name.');
         this._eventEmitter = new EventEmitter();
         this._id = +new Date() + Math.random() * 100000;
         this._name = name;
@@ -31,7 +31,7 @@ export default class CanvasElement {
         this._children = [];
         this._canvas = canvas || undefined;
         this._draw = true;
-        this._reactToIoEvents = nonReactiveToIO || true;
+        this._reactToIoEvents = nonReactiveToIO !== false;
     }
 
     createEvent(event) {
@@ -42,7 +42,7 @@ export default class CanvasElement {
 
     contains(point) {
         if(this._shape && this._shape._path)
-            return this._canvas.ctx.isPointInPath(this._shape._path, point.x, point.y, 'nonzero');
+            return this._canvas._ctx.isPointInPath(this._shape._path, point.x, point.y, 'nonzero');
         else 
             return false;
     }

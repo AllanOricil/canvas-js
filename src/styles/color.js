@@ -186,16 +186,12 @@ export default class Color {
                 alpha: 1
             };
         } else {
-            return {
-                red: 0,
-                green: 0,
-                blue: 0,
-                alpha: 0
-            };
+            throw new Error(`The color ${color} is not a valid rgb, rgba or hex color.`);
         }
     }
 
     static rgbToHex(rgb) {
+        if(!Color.isRGB(rgb) && !Color.isRGBA(rgb)) throw new Error(`The color ${rgb} is not a valid rgb or rgba color.`);
         rgb = rgb.replace(/\s/g, "");
         const rgbNumbers = rgb.replace('rgb(', '').replace('rgba(', '').replace(')', '').split(',');
         let hex = '#';
@@ -226,6 +222,14 @@ export default class Color {
 
     get hex() {
         return Color.rgbToHex(this.rgb);
+    }
+
+    set color(newColor){
+        if (typeof newColor === 'string') newColor = Color.string2Color(newColor);
+        this._red = newColor.red;
+        this._green = newColor.green;
+        this._blue = newColor.blue;
+        this._alpha = newColor.alpha || 1;
     }
 
 }

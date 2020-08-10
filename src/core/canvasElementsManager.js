@@ -6,7 +6,6 @@ export default class CanvasElementsManager {
             this._canvasElementMap.set(layer, new Map());
         });
         this._canvasElementLayerMap = new Map();
-
         this._canvasElementsToDraw = [];
         this._reactiveCanvasElements = [];
     }
