@@ -45,16 +45,18 @@ export default class CanvasElementsManager {
     }
 
     moveCanvasElementToLayer(canvasElement, newLayer){
-        this.removeCanvasElementByName(canvasElement._name);
-        canvasElement._z = newLayer;
-        this.addCanvasElement(canvasElement);
-        this._setReactiveAndToDrawCanvasElements();
+        if(canvasElement._z !== newLayer){
+            this.removeCanvasElementByName(canvasElement._name);
+            canvasElement._z = newLayer;
+            this.addCanvasElement(canvasElement);
+            this._setReactiveAndToDrawCanvasElements();
+        }
     }
 
     _setReactiveAndToDrawCanvasElements(){
         this._reactiveCanvasElements = [];
         this._canvasElementsToDraw = [];
-        for (let [layer, layerCanvasElements] of this._canvasElementMap.entries()) {
+        for (let layerCanvasElements of this._canvasElementMap.values()) {
             layerCanvasElements.forEach(canvasElement => {
                 if(canvasElement._draw) this._canvasElementsToDraw.push(canvasElement);
                 if(canvasElement._reactToIoEvents) this._reactiveCanvasElements.push(canvasElement);

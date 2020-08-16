@@ -1,5 +1,4 @@
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
@@ -17,23 +16,10 @@ module.exports = {
         port: 9000
     },
     plugins: [
-        new MiniCssExtractPlugin(
-            {
-                filename: '[name].css',
-                chunkFilename: '[id].css',
-            }
-        ),
         new CleanWebpackPlugin()
     ],
     module: {
         rules: [
-            {
-                test: /\.(png|jpe?g|gif|svg)$/i,
-                loader: 'file-loader',
-                options: {
-                    outputPath: 'assets/images/',
-                },
-            },
             {
                 test: /\.json5$/i,
                 loader: 'json5-loader',
@@ -45,23 +31,18 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
+                    'style-loader',
                     {
-                        loader: MiniCssExtractPlugin.loader,
+                        loader: 'css-loader',
                         options: {
-                            hmr: true,
-                            reloadAll: true,
+                            modules: true,
                         }
-                    }, 
-                    'css-loader'
+                    }
                 ]
             },
             {
-                test: /\.(ttf|woff|woff2)$/,
-                loader: 'url-loader',
-                options: {
-                    name: '[name].[ext]',
-                    outputPath: 'assets/fonts/'
-                }
+                test: /\.(jpe?g|png|ttf|eot|svg|woff(2)?)(\?[a-z0-9=&.]+)?$/,
+                use: 'base64-inline-loader?limit=1000&name=[name].[ext]'
             }
         ],
     },

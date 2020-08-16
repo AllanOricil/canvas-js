@@ -35,13 +35,13 @@ export default class Triangle extends Shape {
         this._path.lineTo(this._transform._position.x - this._transform._dimension.width, this._transform._position.y + this._transform._dimension.height / 2);
         this._path.closePath();
 
-        ctx.stroke(this._path);
-        ctx.fill(this._path);
+        if(this._border && this._border._color) ctx.stroke(this._path);
+        if(this._background && this._background._color) ctx.fill(this._path);
 
         ctx.shadowColor = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-        ctx.stroke(this._path);
+        if(this._border && this._border._color) ctx.stroke(this._path);
         ctx.restore();
     }
 }

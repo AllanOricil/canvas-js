@@ -41,13 +41,13 @@ export default class Diamond extends Shape {
         this._path.quadraticCurveTo(this.sides.left.x, this.sides.left.y, this.sides.left.x + this._border.radius, this.sides.left.y - this._border.radius);
         this._path.lineTo(this.sides.top.x - this._border.radius, this.sides.top.y + this._border.radius);
         this._path.closePath();
-        ctx.stroke(this._path);
-        ctx.fill(this._path);
+        if(this._border && this._border._color) ctx.stroke(this._path);
+        if(this._background && this._background._color) ctx.fill(this._path);
 
         ctx.shadowColor = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-        ctx.stroke(this._path);
+        if(this._border && this._border._color) ctx.stroke(this._path);
         ctx.restore();
     }
 }

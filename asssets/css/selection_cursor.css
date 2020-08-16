@@ -1,0 +1,7 @@
+.selection_cursor{
+    cursor: url('/asssets/images/selection_cursor.svg'), auto !important;
+}
+
+canvas:focus{
+    outline: none !important;
+}

@@ -1,8 +1,6 @@
 import { syntaxHighlight } from '../utils/json.js';
-import Position from '../transforms/position.js';
 import Padding from '../styles/padding.js';
 import Transform from '../transforms/transform.js';
-import EventEmitter from './eventEmitter.js';
 
 export default class CanvasElement {
 
@@ -14,10 +12,11 @@ export default class CanvasElement {
         rotation,
         parent,
         nonReactiveToIO,
+        z
     }, canvas) {
         if(!name) throw new Error('Every Canvas Element must have a name.');
-        this._eventEmitter = new EventEmitter();
         this._id = +new Date() + Math.random() * 100000;
+        this._z = z;
         this._name = name;
         this._selected = false;
         this._hover = false;
@@ -34,11 +33,20 @@ export default class CanvasElement {
         this._reactToIoEvents = nonReactiveToIO !== false;
     }
 
-    createEvent(event) {
-        return new CustomEvent(event, {
-            detail: this,
-        });
+    emit(eventName){
+        this._canvas._el.dispatchEvent(
+            new CustomEvent(
+                eventName, 
+                {
+                    detail: this,
+                }
+            )
+        );
     }
+
+    draw(){}
+
+    clear(){}
 
     contains(point) {
         if(this._shape && this._shape._path)
@@ -58,13 +66,27 @@ export default class CanvasElement {
         return syntaxHighlight(this.toString());
     }
 
-    on(event, callback) {
-        this._eventEmitter.on(event, callback);
-    }
+    select(){}
 
-    emit(event, data) {
-        this._eventEmitter.emit(event, data);
-    }
+    deselect(){}
+
+    mousedown(e){}
+
+    click(e){}
+
+    clickout(){}
+
+    dblckick(e){}
+
+    mouseup(e){}
+
+    wheel(e){}
+
+    mousemove({x, y}){}
+
+    mouseenter(e){}
+
+    mouseleave(e){}
 
     set position({x, y}) {
         this._transform.position = {x, y};
