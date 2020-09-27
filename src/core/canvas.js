@@ -2,6 +2,7 @@ import Position from '../transforms/position.js';
 import Transform from '../transforms/transform.js';
 import CanvasElementsManager from './canvasElementsManager.js';
 import styles from '../../asssets/css/selection_cursor.css';
+import Worker from './ticker.worker.js';
 
 export default class Canvas {
 
@@ -35,6 +36,7 @@ export default class Canvas {
         this._canvasElementsManager = new CanvasElementsManager();
         this._dpi = window.devicePixelRatio;
         this._el = canvas || document.getElementById('canvas');
+        this._el.style.overscrollBehavior = 'none';
         this._el.style.maxHeight = 'none';
         this._el.classList.add(styles['canvas:focus']);
         this._el.style.cursor = 'grab';
@@ -100,15 +102,17 @@ export default class Canvas {
         this._canvasElementBeingHovered = null;
         
         this._el.addEventListener('mousedown', e => {
+            this._mouseDownTransformedPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+
             this._el.setAttribute('tabindex', 1);
             if(this._canMoveCanvasElements && this._pressingCtrl){
                 this._selectedCanvasElements.forEach((canvasElement) =>  {
-                    canvasElement.clickout();
+                    canvasElement.clickout(e);
                 });
                 this._selectedCanvasElements = [];
                 this._el.classList.add(styles.selection_cursor);
                 this._isSelecting = true;
-                this._selectionStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+                this._selectionStartPosition = { x: this._mouseDownTransformedPosition.x , y: this._mouseDownTransformedPosition.y };
             }else{
                 if (this._canvasElementBeingHovered &&
                     this._canMoveCanvasElements &&
@@ -122,7 +126,7 @@ export default class Canvas {
                     }
                     this._el.style.cursor = 'grabbing';
                     this._canvasElementBeingDragged = this._canvasElementBeingHovered;
-                    this._canvasElementDragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+                    this._canvasElementDragStartPosition = { x: this._mouseDownTransformedPosition.x , y: this._mouseDownTransformedPosition.y };
 
                     for (let i = 0; i < this._selectedCanvasElements.length; i++) {
                         let selectedCanvasElement = this._selectedCanvasElements[i];
@@ -148,6 +152,8 @@ export default class Canvas {
                     
                     if(this._selectedCanvasElements.length !== 0) this._selectedCanvasElements = [];
 
+                    this._el.dispatchEvent(new Event('deselectallcanvaselements'));
+
                     if(this._canDragCanvas){
                         this._isCanvasBeingDragged = true;
                         this._el.style.cursor = 'grabbing';
@@ -155,100 +161,95 @@ export default class Canvas {
                     }
                 }
             }
-            this._isCurrentFrameDirty = true;
         });
 
-        let start = Date.now();
         this._el.addEventListener('mousemove', e => {
-            if(Date.now() - start >= 12){
-                this._mouse._x = e.offsetX;
-                this._mouse._y = e.offsetY;
-                this._currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
-                if(this._isSelecting){
-                    this._selectedCanvasElements = [];
-                    this._selectionEndPosition = this._currentTransformedCursor;
-                    this._selectionWidth =  this._selectionEndPosition.x - this._selectionStartPosition.x;
-                    this._selectionHeight =  this._selectionEndPosition.y - this._selectionStartPosition.y;
+            this._mouse._x = e.offsetX;
+            this._mouse._y = e.offsetY;
+            this._currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
 
-                    let _selectionX1 = this._selectionStartPosition.x;
-                    let _selectionY1 = this._selectionStartPosition.y;
-                    let _selectionX2 = this._selectionEndPosition.x;
-                    let _selectionY2 = this._selectionEndPosition.y;
-                    
-                    if(this._selectionWidth < 0) {
-                        const selectionStartXPosition = _selectionX1;
-                        _selectionX1 = _selectionX2;
-                        _selectionX2 = selectionStartXPosition;
-                    };
-                    if(this._selectionHeight < 0) {
-                        const selectionStartYPosition = _selectionY1;
-                        _selectionY1 = _selectionY2;
-                        _selectionY2 = selectionStartYPosition;
-                    };
+            if(this._isSelecting){
+                this._selectedCanvasElements = [];
+                this._selectionWidth =  this._currentTransformedCursor.x - this._selectionStartPosition.x;
+                this._selectionHeight =  this._currentTransformedCursor.y - this._selectionStartPosition.y;
 
-                    let nonSelectedCanvasElements = [];
-                    for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
-                        let canvasElement = this._canvasElementsManager._reactiveCanvasElements[i];
-                        if(
-                            !(
-                                canvasElement._transform._position.x > _selectionX2 || 
-                                canvasElement._transform._position.x + canvasElement._transform._dimension.width < _selectionX1 ||
-                                canvasElement._transform._position.y > _selectionY2 || 
-                                canvasElement._transform._position.y + canvasElement._transform._dimension.height < _selectionY1
-                            )
-                        ){
-                            this._selectedCanvasElements.push(canvasElement);
-                        }else{
-                            nonSelectedCanvasElements.push(canvasElement);
-                        }
+                let _selectionX1 = this._selectionStartPosition.x;
+                let _selectionY1 = this._selectionStartPosition.y;
+                let _selectionX2 = this._currentTransformedCursor.x;
+                let _selectionY2 = this._currentTransformedCursor.y;
+                
+                if(this._selectionWidth < 0) {
+                    const selectionStartXPosition = _selectionX1;
+                    _selectionX1 = _selectionX2;
+                    _selectionX2 = selectionStartXPosition;
+                };
+                if(this._selectionHeight < 0) {
+                    const selectionStartYPosition = _selectionY1;
+                    _selectionY1 = _selectionY2;
+                    _selectionY2 = selectionStartYPosition;
+                };
+
+                let nonSelectedCanvasElements = [];
+                for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
+                    let canvasElement = this._canvasElementsManager._reactiveCanvasElements[i];
+                    if(
+                        !(
+                            canvasElement._transform._position.x > _selectionX2 || 
+                            canvasElement._transform._position.x + canvasElement._transform._dimension.width < _selectionX1 ||
+                            canvasElement._transform._position.y > _selectionY2 || 
+                            canvasElement._transform._position.y + canvasElement._transform._dimension.height < _selectionY1
+                        )
+                    ){
+                        this._selectedCanvasElements.push(canvasElement);
+                    }else{
+                        nonSelectedCanvasElements.push(canvasElement);
                     }
+                }
+
+                nonSelectedCanvasElements.forEach(canvasElement => canvasElement.deselect());
+                this._selectedCanvasElements.forEach(canvasElement => canvasElement.select());
+            }else{
+                if (this._isCanvasBeingDragged) {
+                    this._ctx.translate(Math.floor(this._currentTransformedCursor.x - this._dragStartPosition.x), Math.floor(this._currentTransformedCursor.y - this._dragStartPosition.y));                       
+                    this._dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
                     
-                    nonSelectedCanvasElements.forEach(nonSelectedCanvasElement => nonSelectedCanvasElement.clickout(e));
-                    this._selectedCanvasElements.forEach(selectedCanvasElement => selectedCanvasElement.mousedown(e));
-                    this._isCurrentFrameDirty = true;
-                }else{
-                    if (this._isCanvasBeingDragged) {
-                        this._ctx.translate(Math.floor(this._currentTransformedCursor.x - this._dragStartPosition.x), Math.floor(this._currentTransformedCursor.y - this._dragStartPosition.y));                       
-                        this._dragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
-                        this._isCurrentFrameDirty = true;
+                } else {
+                    if (this._canvasElementBeingDragged) {
+                        this._cancelClick = true;
+                        const deltaX = Math.floor(this._currentTransformedCursor.x - this._canvasElementDragStartPosition.x);
+                        const deltaY = Math.floor(this._currentTransformedCursor.y - this._canvasElementDragStartPosition.y);
+                        if(this._isCanvasElementBeingDraggedSelected){
+                            this._selectedCanvasElements.forEach(selectedCanvasElement => {
+                                selectedCanvasElement.mouseDrag({ deltaX, deltaY });
+                            });
+                        }else{
+                            this._canvasElementBeingDragged.mouseDrag({ deltaX, deltaY });
+                        }
+                        this._canvasElementDragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
+                        
                     } else {
-                        if (this._canvasElementBeingDragged) {
-                            this._cancelClick = true;
-                            const deltaX = Math.floor(this._currentTransformedCursor.x - this._canvasElementDragStartPosition.x);
-                            const deltaY = Math.floor(this._currentTransformedCursor.y - this._canvasElementDragStartPosition.y);
-                            if(this._isCanvasElementBeingDraggedSelected){
-                                this._selectedCanvasElements.forEach(selectedCanvasElement => {
-                                    selectedCanvasElement.mouseDrag({ deltaX, deltaY });
-                                });
-                            }else{
-                                this._canvasElementBeingDragged.mouseDrag({ deltaX, deltaY });
+                        if(this._canvasElementBeingHovered && this._canvasElementBeingHovered.contains(this._mouse)){
+                            this._canvasElementBeingHovered.mousemove(this._mouse);
+                            
+                        }else{
+                            if(this._canvasElementBeingHovered){
+                                this._canvasElementBeingHovered.mouseleave( this._mouse);
+                                this._canvasElementBeingHovered = null;
                             }
-                            this._canvasElementDragStartPosition = this.getTransformedPoint(e.offsetX, e.offsetY);
-                            this._isCurrentFrameDirty = true;
-                        } else {
-                            if(this._canvasElementBeingHovered && this._canvasElementBeingHovered.contains(this._mouse)){
-                                this._canvasElementBeingHovered.mousemove(this._mouse);
-                                this._isCurrentFrameDirty = true;
-                            }else{
-                                if(this._canvasElementBeingHovered){
-                                    this._canvasElementBeingHovered.mouseleave( this._mouse);
-                                    this._canvasElementBeingHovered = null;
+                            for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
+                                let canvasElement = this._canvasElementsManager._reactiveCanvasElements[i];
+                                if (canvasElement.contains(this._mouse)) {
+                                    this._canvasElementBeingHovered = canvasElement;
+                                    canvasElement.mouseenter(this._mouse);
+                                    break;
                                 }
-                                for (let i = this._canvasElementsManager._reactiveCanvasElements.length - 1; i >= 0; i--) {
-                                    let canvasElement = this._canvasElementsManager._reactiveCanvasElements[i];
-                                    if (canvasElement.contains(this._mouse)) {
-                                        this._canvasElementBeingHovered = canvasElement;
-                                        canvasElement.mouseenter(this._mouse);
-                                        break;
-                                    }
-                                }
-                                this._isCurrentFrameDirty = true;
                             }
+                            
                         }
                     }
                 }
-                start = Date.now();
             }
+
         });
 
         this._el.addEventListener('mouseup', e => {
@@ -266,7 +267,6 @@ export default class Canvas {
                 this._isCanvasBeingDragged = false;
                 this._el.style.cursor = 'grab';
             }
-            this._isCurrentFrameDirty = true;
         });
 
         this._el.addEventListener('click', e => {
@@ -275,7 +275,7 @@ export default class Canvas {
             } else {
                 if (this._canvasElementBeingHovered) {
                     this._canvasElementBeingHovered.click(e);
-                    this._isCurrentFrameDirty = true;
+                    
                 }
             }
         });
@@ -286,7 +286,7 @@ export default class Canvas {
             } else {
                 if (this._canvasElementBeingHovered) {
                     this._canvasElementBeingHovered.dblclick(e);
-                    this._isCurrentFrameDirty = true;
+                    
                 }
             }
         });
@@ -299,23 +299,20 @@ export default class Canvas {
         });*/
         
         this._el.addEventListener('wheel', e => {
-            if(Date.now() - start >= 12){
-                this._currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
-                const zoom = e.wheelDelta > 0 || e.deltaY < 0 ? (1 + this._scaleLimits.speed) : (1 - this._scaleLimits.speed);
-                const futureZoomLevel = this._ctx.getTransform().a * zoom;
+            e.stopPropagation();
+            this._currentTransformedCursor = this.getTransformedPoint(e.offsetX, e.offsetY);
+            const zoom = e.wheelDelta > 0 || e.deltaY < 0 ? (1 + this._scaleLimits.speed) : (1 - this._scaleLimits.speed);
+            const futureZoomLevel = this._ctx.getTransform().a * zoom;
 
-                if(this._canvasElementBeingHovered){
-                    this._canvasElementBeingHovered.wheel(e);
-                }else{
-                    if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
-                        this._ctx.translate(this._currentTransformedCursor.x, this._currentTransformedCursor.y);
-                        this._ctx.scale(zoom, zoom);
-                        this._ctx.translate(-this._currentTransformedCursor.x, -this._currentTransformedCursor.y);
-                        this._isCurrentFrameDirty = true;
-                    }
+            if(this._canvasElementBeingHovered){
+                this._canvasElementBeingHovered.wheel(e);
+            }else{
+                if(futureZoomLevel > this._scaleLimits.min && futureZoomLevel < this._scaleLimits.max){
+                    this._ctx.translate(this._currentTransformedCursor.x, this._currentTransformedCursor.y);
+                    this._ctx.scale(zoom, zoom);
+                    this._ctx.translate(-this._currentTransformedCursor.x, -this._currentTransformedCursor.y);
+                    
                 }
-                start = Date.now();
-                this._isCurrentFrameDirty = true;
             }
         },  {passive: true});
 
@@ -329,6 +326,7 @@ export default class Canvas {
         this._el.addEventListener('keyup', e => {
             this._pressingCtrl = false;
             if(!this._isSelecting) this._el.classList.remove(styles.selection_cursor);
+
         });
 
         this._el.addEventListener("focusout", ()=>{
@@ -349,10 +347,10 @@ export default class Canvas {
 
             this._el.removeAttribute('tabindex');
             this._el.classList.remove(styles.selection_cursor);
-            this._isCurrentFrameDirty = true;
+
         });
 
-        const resizeClientWindow = e => {
+        const resizeCanvas = e => {
             this._transform._dimension.width = this._el.parentElement.clientWidth;
             this._transform._dimension.height = this._el.parentElement.clientHeight;
             if (this._offscreenCanvas) {
@@ -362,23 +360,25 @@ export default class Canvas {
                 this._el.width = this._transform._dimension.width;
                 this._el.height = this._transform._dimension.height;
             }
-            this._isCurrentFrameDirty = true;
         };
 
-        window.onresize = resizeClientWindow;
-        this._isCurrentFrameDirty = true;
+        window.onresize = resizeCanvas;
+        this._el.parentElement.onresize = resizeCanvas;
+        
         this._el.focus();
+
+        this._boundMethod = this.draw.bind(this);
+        this._worker = new Worker();
+        this._worker.addEventListener('message', (e)=>{
+            window.requestAnimationFrame(this._boundMethod);
+        });
+
         this.start();
     }
 
     start(){
-        setInterval(()=>{
-            this._el.focus();
-            if(this._isCurrentFrameDirty){
-                this.draw();
-                this._isCurrentFrameDirty = false;
-            }
-        }, 1000/this._fps);
+        this._worker.postMessage({ action: 'start' });
+        window.requestAnimationFrame(this._boundMethod);
     }
 
     draw() {
@@ -410,6 +410,14 @@ export default class Canvas {
         const transformedX = inverseZoom * x - inverseZoom * transform.e;
         const transformedY = inverseZoom * y - inverseZoom * transform.f;
         return { x: Math.floor(transformedX), y: Math.floor(transformedY) };
+    }
+
+    deselectAllCanvasElements(){
+        this._canvasElementsManager._reactiveCanvasElements.forEach((canvasElement) =>  {
+            canvasElement.clickout();
+        });
+        this._selectedCanvasElements = [];
+        this.draw();
     }
 
     saveAsImage(name) {

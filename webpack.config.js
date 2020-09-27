@@ -34,6 +34,13 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.worker\.js$/,
+                loader: 'worker-loader',
+                options: { 
+                    inline: 'fallback' 
+                }
+            },
+            {
                 test: /\.json5$/i,
                 loader: 'json5-loader',
                 type: 'javascript/auto',

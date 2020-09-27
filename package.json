@@ -1,6 +1,6 @@
 {
   "name": "@allanoricil/canvasjs",
-  "version": "0.13.33",
+  "version": "0.14.1",
   "description": "Lib to work with Canvas using javascript",
   "main": "/dist/index.js",
   "module": "/dist/index.js",
@@ -9,8 +9,6 @@
     "dist"
   ],
   "scripts": {
-    "minify": "babel index.js -d dist",
-    "uglify": "uglifyjs dist/index.js -o dist/index.min.js -c -m",
     "build": "npx webpack --config webpack.config.js",
     "dev": "npx webpack --config webpack.dev.config.js",
     "start": "npx webpack --watch --config webpack.dev.config.js"
@@ -46,7 +44,8 @@
     "url-loader": "^4.1.0",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.0",
+    "worker-loader": "^3.0.2"
   },
   "dependencies": {
     "base64-inline-loader": "^1.1.1",

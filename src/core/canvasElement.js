@@ -15,8 +15,10 @@ export default class CanvasElement {
         z
     }, canvas) {
         if(!name) throw new Error('Every Canvas Element must have a name.');
+        if(!canvas) throw new Error('Every Canvas Element must be in a Canvas.');
         this._id = +new Date() + Math.random() * 100000;
         this._z = z;
+        this._canvas = canvas || undefined;
         this._name = name;
         this._selected = false;
         this._hover = false;
@@ -28,7 +30,6 @@ export default class CanvasElement {
         this._padding = padding ? new Padding(padding) : Padding.NONE;
         this._parent = parent || undefined;
         this._children = [];
-        this._canvas = canvas || undefined;
         this._draw = true;
         this._reactToIoEvents = nonReactiveToIO !== false;
     }
@@ -88,11 +89,23 @@ export default class CanvasElement {
 
     mouseleave(e){}
 
+    moveToLayer(newLayer){
+        this._canvas._canvasElementsManager.moveCanvasElementToLayer(this, newLayer);
+    }
+
     set position({x, y}) {
         this._transform.position = {x, y};
         if(this._shape){
             this._shape._transform.position = {x, y};
         }
+    }
+
+    set name(newName){
+        this._canvas._canvasElementsManager.getCanvasElementLayerByName(this._name).delete(this._name);
+        this._canvas._canvasElementsManager._canvasElementLayerMap.delete(this._name);
+        this._name = newName;
+        this._canvas._canvasElementsManager.getLayer(this._z).set(this._name, this);
+        this._canvas._canvasElementsManager._canvasElementLayerMap.set(newName, this._z);
     }
 
 }

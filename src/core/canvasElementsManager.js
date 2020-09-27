@@ -32,7 +32,8 @@ export default class CanvasElementsManager {
 
     removeCanvasElementByName(name) {
         const entityLayer = this.getCanvasElementLayerByName(name);
-        return entityLayer.delete(name);
+        entityLayer.delete(name);
+        this._setReactiveAndToDrawCanvasElements();
     }
 
     clearLayer(z) {
